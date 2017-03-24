@@ -10,16 +10,12 @@ import sqlite3 as lite
 import contextlib
 from datetime import datetime
 
-if sys.version_info[0] == 3:
-    from urllib.request import urlopen
-else:
-    from urllib import urlopen
+from urllib import urlopen
 
 
 class Scraper:
     def __init__(self, access_token, db_path, id_list):
-        """Connects to Facebook Graph API and creates an SQLite database with four tables for Posts, Comments,
-        Post_likes and People if not exists.
+        """Connects to Facebook Graph API and creates an SQLite database with four tables for People if not exists.
 
         Takes three arguments:
         access_token: your own Facebook access token that you can get on https://developers.facebook.com/tools/explorer/
@@ -150,16 +146,21 @@ class Scraper:
                     # self.cur.execute("INSERT OR IGNORE INTO Comments VALUES(?, ?, ?, ?, ?, ?)", comments_data)
                     # self.cur.execute(
                         # "UPDATE Comments SET like_count=like_count WHERE CHANGES()=0 AND comment_id=comment_id")
+                    print("inserting %s" % comment_person_name)
                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_data)
                     comment_count += 1
 
                     if 'next' in message['comments']['paging']:
                         next_comment_url = message['comments']['paging']['next']
                         while next_comment_url:
+                            if comment_count >= 1000:
+                                break
                             try:
-                                with urlopen(next_comment_url) as url:
-                                    read_url = url.read()
+                                url = urlopen(next_comment_url)
+                                read_url = url.read()
                                 get_more_comment = simplejson.loads(read_url)
+                                # pagination incorecctly and not updating next_comment_url
+                                # next_comment_url = message['comments']['paging']['next']
                                 for more_comments in get_more_comment['data']:
                                     comment_content = more_comments['message']
                                     comment_id = more_comments['id']
@@ -183,6 +184,7 @@ class Scraper:
                                     #                  comments_data)
                                     # self.cur.execute("UPDATE Comments SET like_count=like_count "
                                     #                  "WHERE CHANGES()=0 AND comment_id=comment_id")
+                                    print("inserting comment %s" % comment_person_name)
                                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_data)
                                     comment_count += 1
 
@@ -196,7 +198,7 @@ class Scraper:
                                 else:
                                     break
             last_comment_date = max(comment_dates)
-
+            comment_count = 0
             like_count = 0
             likers = {}
             if 'likes' in message:
@@ -207,8 +209,8 @@ class Scraper:
                 if 'paging' in l.keys():
                     while True:
                         try:
-                            with urlopen(l['paging']['next']) as url:
-                                read_url = url.read()
+                            url = urlopen(l['paging']['next'])
+                            read_url = url.read()
                             l = simplejson.loads(read_url)
                             like_count += len(l['data'])
                             for k in l['data']:
@@ -224,6 +226,7 @@ class Scraper:
                     likes_data = (like_id, liker_hash_id, post_id)
                     people_like_data = (liker_hash_id, liker_id, liker_name)
                     # self.cur.execute("INSERT OR IGNORE INTO Post_likes VALUES(?, ?, ?)", likes_data)
+                    print("inserting liker %s" % liker_name)
                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_like_data)
 
             like_count = like_count
@@ -242,6 +245,7 @@ class Scraper:
             #     "UPDATE Posts SET last_comment_date=last_comment_date, mentions_count=mentions_count, "
             #     "mentions=mentions, like_count=like_count, comment_count=comment_count, "
             #     "share_count=share_count WHERE CHANGES()=0 AND post_id=post_id")
+            print("inserting person %s" % person_name)
             self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_org_data)
             self.con.commit()
 
@@ -275,8 +279,8 @@ class Scraper:
 
                     try:
                         # convert json into nested dicts and lists
-                        with urlopen(next_page_url) as url:
-                            read_url = url.read()
+                        url = urlopen(next_page_url)
+                        read_url = url.read()
                         d = simplejson.loads(read_url)
                     except Exception as e:
                         print("Error reading id %s, exception: %s" % (feed, e))
