@@ -7,6 +7,7 @@ import facebook
 import hashlib
 import sys
 import sqlite3 as lite
+import contextlib
 from datetime import datetime
 
 if sys.version_info[0] == 3:
@@ -46,7 +47,6 @@ class Scraper:
                 "person_hash_id TEXT, published_date TEXT, last_comment_date TEXT, post_type TEXT, status_type TEXT, "
                 "post_link TEXT, link TEXT, video_link TEXT, picture_link TEXT, link_name TEXT, link_caption TEXT, "
                 "link_description TEXT, comment_count INTEGER, share_count INTEGER, like_count INTEGER, "
-                "love_count INTEGER, wow_count INTEGER, haha_count INTEGER, sad_count INTEGER, angry_count INTEGER, "
                 "mentions_count INTEGER, mentions TEXT, location TEXT, date_inserted TEXT)")
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS Comments(comment_id TEXT PRIMARY KEY, person_hash_id TEXT, post_id TEXT, "
@@ -56,27 +56,27 @@ class Scraper:
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS People(person_hash_id TEXT PRIMARY KEY, person_id TEXT, person_name TEXT)")
 
-    def get_reactions(self, post_id, access_token):
-        """Gets reactions for a post."""
+    # def get_reactions(self, post_id, access_token):
+    #     """Gets reactions for a post."""
 
-        base = "https://graph.facebook.com/v2.6"
-        node = "/%s" % post_id
-        reactions = "/?fields=" \
-                    "reactions.type(LIKE).limit(0).summary(total_count).as(like)," \
-                    "reactions.type(LOVE).limit(0).summary(total_count).as(love)," \
-                    "reactions.type(WOW).limit(0).summary(total_count).as(wow)," \
-                    "reactions.type(HAHA).limit(0).summary(total_count).as(haha)," \
-                    "reactions.type(SAD).limit(0).summary(total_count).as(sad)," \
-                    "reactions.type(ANGRY).limit(0).summary(total_count).as(angry)"
-        parameters = "&access_token=%s" % access_token
-        url = base + node + reactions + parameters
+    #     base = "https://graph.facebook.com/v2.6"
+    #     node = "/%s" % post_id
+    #     reactions = "/?fields=" \
+    #                 "reactions.type(LIKE).limit(0).summary(total_count).as(like)," \
+    #                 "reactions.type(LOVE).limit(0).summary(total_count).as(love)," \
+    #                 "reactions.type(WOW).limit(0).summary(total_count).as(wow)," \
+    #                 "reactions.type(HAHA).limit(0).summary(total_count).as(haha)," \
+    #                 "reactions.type(SAD).limit(0).summary(total_count).as(sad)," \
+    #                 "reactions.type(ANGRY).limit(0).summary(total_count).as(angry)"
+    #     parameters = "&access_token=%s" % access_token
+    #     url = base + node + reactions + parameters
 
-        # retrieve data
-        with urlopen(url) as url:
-            read_url = url.read()
-        data = simplejson.loads(read_url)
+    #     # retrieve data
+    #     with urlopen(url) as url:
+    #         read_url = url.read()
+    #     data = simplejson.loads(read_url)
 
-        return data
+    #     return data
 
     def write_data(self, d):
         """Writes data from the given Facebook page in SQLite database separated in four tables for posts, comments,
@@ -110,14 +110,14 @@ class Scraper:
             video_link = '' if 'source' not in message else message['source']
             share_count = 0 if 'shares' not in message else message['shares']['count']
 
-            reaction_data = self.get_reactions(post_id=post_id, access_token=self.access_token) \
-                if published_date > '2016-02-24 00:00:00' else {}
-            love_count = 0 if 'love' not in reaction_data else reaction_data['love']['summary']['total_count']
-            wow_count = 0 if 'wow' not in reaction_data else reaction_data['wow']['summary']['total_count']
-            haha_count = 0 if 'haha' not in reaction_data else reaction_data['haha']['summary']['total_count']
-            sad_count = 0 if 'sad' not in reaction_data else reaction_data['sad']['summary']['total_count']
-            angry_count = 0 if 'angry' not in reaction_data else reaction_data['angry']['summary']['total_count']
-            reaction_like_count = 0 if 'like' not in reaction_data else reaction_data['like']['summary']['total_count']
+            # reaction_data = self.get_reactions(post_id=post_id, access_token=self.access_token) \
+            #     if published_date > '2016-02-24 00:00:00' else {}
+            # love_count = 0 if 'love' not in reaction_data else reaction_data['love']['summary']['total_count']
+            # wow_count = 0 if 'wow' not in reaction_data else reaction_data['wow']['summary']['total_count']
+            # haha_count = 0 if 'haha' not in reaction_data else reaction_data['haha']['summary']['total_count']
+            # sad_count = 0 if 'sad' not in reaction_data else reaction_data['sad']['summary']['total_count']
+            # angry_count = 0 if 'angry' not in reaction_data else reaction_data['angry']['summary']['total_count']
+            # reaction_like_count = 0 if 'like' not in reaction_data else reaction_data['like']['summary']['total_count']
 
             mentions_count = 0
             if 'to' in message:
@@ -226,16 +226,16 @@ class Scraper:
                     self.cur.execute("INSERT OR IGNORE INTO Post_likes VALUES(?, ?, ?)", likes_data)
                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_like_data)
 
-            like_count = like_count if published_date < '2016-02-24 00:00:00' else reaction_like_count
+            like_count = like_count
 
             post_data = (
                 post_id, status_id, content, person_hash_id, published_date, last_comment_date, post_type, status_type,
                 post_link, link, video_link, picture_link, link_name, link_caption, link_description, comment_count,
-                share_count, like_count, love_count, wow_count, haha_count, sad_count, angry_count, mentions,
+                share_count, like_count, mentions,
                 mentions_count, location, date_inserted)
             people_org_data = (person_hash_id, person_id, person_name)
             self.cur.execute(
-                "INSERT OR IGNORE INTO Posts VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                "INSERT OR IGNORE INTO Posts VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
                 "?, ?, ?, ?, ?)",
                 post_data)
             self.cur.execute(
