@@ -42,17 +42,17 @@ class Scraper:
             cur = con.cursor()
             self.cur = cur
             # create tables for posts, comments, post likes and people if not exists
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS Posts(post_id TEXT PRIMARY KEY, status_id TEXT, content TEXT, "
-                "person_hash_id TEXT, published_date TEXT, last_comment_date TEXT, post_type TEXT, status_type TEXT, "
-                "post_link TEXT, link TEXT, video_link TEXT, picture_link TEXT, link_name TEXT, link_caption TEXT, "
-                "link_description TEXT, comment_count INTEGER, share_count INTEGER, like_count INTEGER, "
-                "mentions_count INTEGER, mentions TEXT, location TEXT, date_inserted TEXT)")
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS Comments(comment_id TEXT PRIMARY KEY, person_hash_id TEXT, post_id TEXT, "
-                "comment_content TEXT, comment_date TEXT, like_count INTEGER)")
-            cur.execute(
-                "CREATE TABLE IF NOT EXISTS Post_likes(like_id TEXT PRIMARY KEY, person_hash_id TEXT, post_id TEXT)")
+            # cur.execute(
+            #     "CREATE TABLE IF NOT EXISTS Posts(post_id TEXT PRIMARY KEY, status_id TEXT, content TEXT, "
+            #     "person_hash_id TEXT, published_date TEXT, last_comment_date TEXT, post_type TEXT, status_type TEXT, "
+            #     "post_link TEXT, link TEXT, video_link TEXT, picture_link TEXT, link_name TEXT, link_caption TEXT, "
+            #     "link_description TEXT, comment_count INTEGER, share_count INTEGER, like_count INTEGER, "
+            #     "mentions_count INTEGER, mentions TEXT, location TEXT, date_inserted TEXT)")
+            # cur.execute(
+            #     "CREATE TABLE IF NOT EXISTS Comments(comment_id TEXT PRIMARY KEY, person_hash_id TEXT, post_id TEXT, "
+            #     "comment_content TEXT, comment_date TEXT, like_count INTEGER)")
+            # cur.execute(
+            #     "CREATE TABLE IF NOT EXISTS Post_likes(like_id TEXT PRIMARY KEY, person_hash_id TEXT, post_id TEXT)")
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS People(person_hash_id TEXT PRIMARY KEY, person_id TEXT, person_name TEXT)")
 
@@ -147,9 +147,9 @@ class Scraper:
                     comments_data = (comment_id, comment_person_hash_id, post_id, comment_content, comment_created,
                                      like_count)
                     people_data = (comment_person_hash_id, comment_person_id, comment_person_name)
-                    self.cur.execute("INSERT OR IGNORE INTO Comments VALUES(?, ?, ?, ?, ?, ?)", comments_data)
-                    self.cur.execute(
-                        "UPDATE Comments SET like_count=like_count WHERE CHANGES()=0 AND comment_id=comment_id")
+                    # self.cur.execute("INSERT OR IGNORE INTO Comments VALUES(?, ?, ?, ?, ?, ?)", comments_data)
+                    # self.cur.execute(
+                        # "UPDATE Comments SET like_count=like_count WHERE CHANGES()=0 AND comment_id=comment_id")
                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_data)
                     comment_count += 1
 
@@ -179,10 +179,10 @@ class Scraper:
                                         comment_id, comment_person_hash_id, post_id, comment_content,
                                         comment_created, like_count)
                                     people_data = (comment_person_hash_id, comment_person_id, comment_person_name)
-                                    self.cur.execute("INSERT OR IGNORE INTO Comments VALUES(?, ?, ?, ?, ?, ?)",
-                                                     comments_data)
-                                    self.cur.execute("UPDATE Comments SET like_count=like_count "
-                                                     "WHERE CHANGES()=0 AND comment_id=comment_id")
+                                    # self.cur.execute("INSERT OR IGNORE INTO Comments VALUES(?, ?, ?, ?, ?, ?)",
+                                    #                  comments_data)
+                                    # self.cur.execute("UPDATE Comments SET like_count=like_count "
+                                    #                  "WHERE CHANGES()=0 AND comment_id=comment_id")
                                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_data)
                                     comment_count += 1
 
@@ -223,7 +223,7 @@ class Scraper:
                     like_id = post_id + '_' + liker_hash_id
                     likes_data = (like_id, liker_hash_id, post_id)
                     people_like_data = (liker_hash_id, liker_id, liker_name)
-                    self.cur.execute("INSERT OR IGNORE INTO Post_likes VALUES(?, ?, ?)", likes_data)
+                    # self.cur.execute("INSERT OR IGNORE INTO Post_likes VALUES(?, ?, ?)", likes_data)
                     self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_like_data)
 
             like_count = like_count
@@ -234,14 +234,14 @@ class Scraper:
                 share_count, like_count, mentions,
                 mentions_count, location, date_inserted)
             people_org_data = (person_hash_id, person_id, person_name)
-            self.cur.execute(
-                "INSERT OR IGNORE INTO Posts VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-                "?, ?, ?, ?, ?)",
-                post_data)
-            self.cur.execute(
-                "UPDATE Posts SET last_comment_date=last_comment_date, mentions_count=mentions_count, "
-                "mentions=mentions, like_count=like_count, comment_count=comment_count, "
-                "share_count=share_count WHERE CHANGES()=0 AND post_id=post_id")
+            # self.cur.execute(
+            #     "INSERT OR IGNORE INTO Posts VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+            #     "?, ?, ?, ?, ?)",
+            #     post_data)
+            # self.cur.execute(
+            #     "UPDATE Posts SET last_comment_date=last_comment_date, mentions_count=mentions_count, "
+            #     "mentions=mentions, like_count=like_count, comment_count=comment_count, "
+            #     "share_count=share_count WHERE CHANGES()=0 AND post_id=post_id")
             self.cur.execute("INSERT OR IGNORE INTO People VALUES(?, ?, ?)", people_org_data)
             self.con.commit()
 
