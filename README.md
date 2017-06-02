@@ -3,6 +3,9 @@
 A tool for retrieving posts, comments, likes, reactions and active users' information from public Facebook pages, groups, events, etc. The
 output is a SQLite database with four tables for posts, comments, likes and people.
 
+- token here: https://developers.facebook.com/tools/explorer/
+- python scrapeFB.py -a "EAACEdEose0cBAH4MgibmYGQIhZBwvJXZA2OpEie5D9fph6BQU3L0lPy1ZBH7gh9hjQnyUpI5rivhkEbthBfTjiflO7PdBWtKDSo50bSEgGZA7tFoWpeixveoJso0PuocTAiViitSg5iTyWmpl4gpxNPhyNJZCWyL4e2kTEmVYzK4gkVKLTrVr" -d fb.sqlite -i 549992011872414 where "<token>" is your token and id is group id of group
+
 
 ## Installation
 
